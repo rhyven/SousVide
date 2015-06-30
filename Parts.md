@@ -5,7 +5,7 @@ I really do recommend ModuleFans on AliExpress.com for these bits; they're reall
 1. Arduino Nano v3
 2. Nano v3 Terminal Adapter Board (not essential, but way tidier)
 3. 240v power controller; either:
-  1.  A plain 5V 2-Channel Relay Module Shield; or,
+  1.  A plain 240v 2-Channel Relay Module Shield (5v control voltage); or,
   2.  A pair of 240v solid state relays (control voltage of 5v or lower)
 4. A MAX6675 thermocouple, with K-Type thermoprobe.
 5. A 5v immersible water pump
