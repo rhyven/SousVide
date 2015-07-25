@@ -11,16 +11,16 @@
 ### Ingredients
 
 #### Brine
-* 1 Tbsp ginger, crushed
-* 1c salt
-* 1c raw sugar
+* 2 Tbsp ginger, crushed
+* 1/2c salt
+* 1/2c raw sugar
 * ice cubes
 
 #### Salmon
 * 2x 200g salmon fillets
 * 1 lime
 * 1 lemon
-* Olive Oil
+* A good knob of butter, about 1Tbsp
 * Pepper
 
 ### Method
@@ -34,11 +34,11 @@
 
 ...
 
-* After an hour or so, remove the salmon from the brine and allow to drip dry
-* Drizzle with a little olive oil - no more than a tablespoon in total
+* After an hour or so, remove the salmon from the brine
+* Rinse off the brine!  If you don't do this, it will be oppressively salty!
 * Lay it flat on the bench, skin down, and liberally grind plenty of pepper over both fillets
 * Grate the zest from the lemon and the lime, and sprinkle it evenly over the fillets
-* Slip the fish into your sous vide bag, and vaccuum seal the bag
+* Slip the fish into your sous vide bag, along with a goodly knob of butter, and vaccuum seal the bag
 * Submerge in the sous vide for 2 hours, making sure the whole bag is submerged at all times
 
 ...
