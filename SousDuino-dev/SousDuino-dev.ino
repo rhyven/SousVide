@@ -60,7 +60,7 @@ const int button_delay = 100;
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #define ONE_WIRE_BUS ds_data
-#define TEMPERATURE_PRECISION 12
+#define TEMPERATURE_PRECISION 11
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 DeviceAddress thermocouple;
@@ -77,6 +77,7 @@ LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
 bool HEATING = false;
 bool start_button_pressed = false;
 unsigned long lastPress = 0;
+float tempC = 0.0;
 
 void setup(void)
 {
@@ -138,9 +139,22 @@ void loop(void)
   
   // Read temperature
   sensors.getAddress(thermocouple, 0);
+  sensors.setWaitForConversion(false);
   sensors.begin();
-  sensors.requestTemperatures(); // Send the command to get temperature
-  float tempC = sensors.getTempC(thermocouple);  // Convert temperature into Celcius
+  int loopct=0;
+
+  while(true){
+  // Read the input:
+  Serial.print("wibble" + String(sensors.isConversionAvailable(0)) + "\t");
+    if (sensors.isConversionAvailable(0))
+    {
+      tempC = sensors.getTempC(thermocouple);
+      sensors.requestTemperatures(); // prime the pump for the next one - but don't wait
+    }
+
+  Serial.println(String(loopct)+"\t"+String(tempC));
+  loopct++;    
+  }
 
 //
 //  check_buttons();
