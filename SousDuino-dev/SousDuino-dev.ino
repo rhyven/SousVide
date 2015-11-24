@@ -1,7 +1,19 @@
+/*************************
+ * TO DO
+ * 
+ * 1) add in a counter that increments on each "tweak"
+ *   - if we have to do too many tweaks at a time, either increase the tweak time, or decrease the 0.4 degree margin
+ *   
+ *  
+ */
+
+ 
+
+
 // Eric's SousDuino controller, version 2
 // Written June 2015 by Eric Light
 
-int TARGET_TEMP = 60;
+int TARGET_TEMP = 24;
 
 // Download the OneWriteNoResistor library from https://github.com/bigjosh/OneWireNoResistor/
 // More info about the NoResistor library at http://wp.josh.com/2014/06/23/no-external-pull-up-needed-for-ds18b20-temp-sensor/#more-1892
@@ -96,16 +108,17 @@ void setup(void)
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
 
+  // Initialise thermocouple
+  sensors.getAddress(thermocouple, 0);
+  sensors.setWaitForConversion(false);
+  sensors.begin();
+  sensors.requestTemperatures();
+
 }
 
 
-void check_buttons() {
+void poll_buttons() {
 
-  // read the state of the up button
-
-  // read the state of the down button
-
-  // Shit I'm sure there's a better way to do this.  Gonna have to break this out into a function.
 
   // read the state of the start button
   int button_start_voltage = analogRead(button_start);
@@ -127,118 +140,94 @@ void check_buttons() {
   
 }
 
+void poll_temperature(){
+
+  tempC = sensors.getTempC(thermocouple);
+  sensors.requestTemperatures(); // prime the pump for the next one - but don't wait
+  Serial.println(String(tempC));
+  
+}
+
+void temp_react(){
+
+  // Make sure we're getting usable readings
+  if (tempC < 0 || tempC > 80) {
+    Serial.print("Unplugged");
+    led_unplugged();
+    relay_control(LOW);
+    delay(100);
+  }
+  else {
+    // Only do this stuff if there's a thermostat plugged in
+    Serial.print(tempC);
+
+    if (tempC > TARGET_TEMP ) {
+      // Overtemp!
+      relay_control(LOW);
+    }
+    else {
+      if (TARGET_TEMP - tempC > .4) {
+        // we're off by over half a degree, so go hard
+        relay_control(HIGH);
+      }
+      else {
+        // We're only off by a tiny amount, so just give it a tickle
+        Serial.print("Tweak");
+        relay_control(HIGH);
+        delay(100);
+        relay_control(LOW);
+      }
+    }
+    
+    led_update(TARGET_TEMP, tempC, true);
+  }
+
+  delay(200);
+
+}
+
 void loop(void)
 {
 
-/*
- * I really want to be checking the state of all the buttons every loop
- * Need to check button_up, button_down, and button_start
- * 
- */
-    
-  
-  // Read temperature
-  sensors.getAddress(thermocouple, 0);
-  sensors.setWaitForConversion(false);
-  sensors.begin();
-  int loopct=0;
+ // poll_buttons();
 
-  while(true){
-  // Read the input:
-  Serial.print("wibble" + String(sensors.isConversionAvailable(0)) + "\t");
-    if (sensors.isConversionAvailable(0))
-    {
-      tempC = sensors.getTempC(thermocouple);
-      sensors.requestTemperatures(); // prime the pump for the next one - but don't wait
-    }
+  poll_temperature();
 
-  Serial.println(String(loopct)+"\t"+String(tempC));
-  loopct++;    
-  }
-
-//
-//  check_buttons();
-//
-//
-//
-//
-//
-//
-//
-//
-//  // Make sure we're getting usable readings
-//  if (tempC < 0) {
-//    Serial.print("Unplugged");
-//    relay_off();
-//    led_unplugged();
-//    delay(500);
-//  }
-//
-//  // See if we need to heat
-//  else {
-//    Serial.print(tempC);
-//
-//    if (tempC > TARGET_TEMP ) {
-//      // Overtemp!
-//      relay_off();
-//    }
-//    else {
-//      if (TARGET_TEMP - tempC > .4) {
-//        // we're off by over half a degree, so go hard
-//        relay_on();
-//      }
-//      else {
-//        // We're only off by a tiny amount, so just give it a tickle
-//        Serial.print("Tweak");
-//        relay_on();
-//        delay(100);
-//        relay_off();
-//      }
-//    }
-//    // Only update the LCD if there's a thermostat plugged in
-//    led_update(TARGET_TEMP, tempC, true);
-//  }
-//
-//  delay(200);
-//
-//}
-//
-//void relay_off()
-//{
-//  Serial.println("... Cooling");
-//  digitalWrite(relay, LOW);
-//  HEATING = false;
-//}
-//
-//void relay_on()
-//{
-//  Serial.println("... Heating");
-//  digitalWrite(relay, HIGH);
-//  HEATING = true;
-//}
-//
-//void led_unplugged() {
-//  lcd.clear();
-//  lcd.setCursor(0, 0);
-//  lcd.print("Probe unplugged!");
-//  lcd.setCursor(0, 1);
-//  lcd.print("Waiting for data");
-//}
-//
-//void led_update(float target, float current, bool Heating)
-//{
-//  // set the cursor to column 0, line 1
-//  // (note: line 1 is the second row, since counting begins with 0):
-//  lcd.clear();
-//  lcd.setCursor(0, 0);
-//  lcd.print("Target:  " + String(target));
-//  lcd.setCursor(0, 1);
-//  lcd.print("Current: " + String(current));
-//  if (HEATING) {
-//    lcd.setCursor(15, 0);
-//    lcd.print("H");
-//  }
-
+  temp_react();  // React intelligently to thermocouple data
 
 }
+
+void relay_control(bool control) {
+  digitalWrite(relay, control);
+
+  switch (control) {
+      case HIGH: Serial.println("... Heating"); break;
+      case LOW: Serial.println("... Cooling"); break;
+  }
+}
+
+void led_unplugged() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Probe unplugged!");
+  lcd.setCursor(0, 1);
+  lcd.print("Waiting for data");
+}
+
+void led_update(float target, float current, bool Heating)
+{
+  // set the cursor to column 0, line 1
+  // (note: line 1 is the second row, since counting begins with 0):
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Target:  " + String(target));
+  lcd.setCursor(0, 1);
+  lcd.print("Current: " + String(current));
+  if (HEATING) {
+    lcd.setCursor(15, 0);
+    lcd.print("H");
+  }
+}
+
+
 
