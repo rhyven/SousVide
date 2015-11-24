@@ -23,14 +23,14 @@ int TARGET_TEMP = 60;
  *  D12
  *  D13
  *  3.3v
- *  A0 - 'Up' button
- *  A1 - 'Down' button
- *  A2 - 'Start' button LED+  (note can't be A6 due to weird A6/A7)
- *  A3 - 'Start' button left -- ALSO 10k resistor from A7 to GND
+ *  A0 - 'Up' button -- ALSO 10k resistor to GND
+ *  A1 - 'Down' button -- ALSO 10k resistor to GND
+ *  A2 - 'Start' button LED+
+ *  A3 - 'Start' button left -- ALSO 10k resistor to GND
  *  A4
  *  A5
- *  A6
- *  A7
+ *  A6 - (can't use due to weird A6/A7)
+ *  A7 - (can't use due to weird A6/A7)
  *  5v - 'Start' button right
  *  GND - 'Start' button LED-
  *  
@@ -42,13 +42,13 @@ int TARGET_TEMP = 60;
  */ 
 
 
-// Thermocouple (DS18B20) PIN labels
+// Thermocouple (DS18B20) pin
 const int ds_data = 8;
 
-// Relay (SSR) PIN labels
+// Relay (SSR) pin
 const int relay = 11;
 
-// Button labels
+// Button pins
 const int button_up = A0;
 const int button_down = A1;
 const int button_start_LED = A2;
@@ -134,7 +134,7 @@ void loop(void)
  * Need to check button_up, button_down, and button_start
  * 
  */
-  
+    
   
   // Read temperature
   sensors.getAddress(thermocouple, 0);
@@ -142,88 +142,88 @@ void loop(void)
   sensors.requestTemperatures(); // Send the command to get temperature
   float tempC = sensors.getTempC(thermocouple);  // Convert temperature into Celcius
 
-
-  check_buttons();
-
-
-
-
-
-
-
-
-  // Make sure we're getting usable readings
-  if (tempC < 0) {
-    Serial.print("Unplugged");
-    relay_off();
-    led_unplugged();
-    delay(500);
-  }
-
-  // See if we need to heat
-  else {
-    Serial.print(tempC);
-
-    if (tempC > TARGET_TEMP ) {
-      // Overtemp!
-      relay_off();
-    }
-    else {
-      if (TARGET_TEMP - tempC > .4) {
-        // we're off by over half a degree, so go hard
-        relay_on();
-      }
-      else {
-        // We're only off by a tiny amount, so just give it a tickle
-        Serial.print("Tweak");
-        relay_on();
-        delay(100);
-        relay_off();
-      }
-    }
-    // Only update the LCD if there's a thermostat plugged in
-    led_update(TARGET_TEMP, tempC, true);
-  }
-
-  delay(200);
-
-}
-
-void relay_off()
-{
-  Serial.println("... Cooling");
-  digitalWrite(relay, LOW);
-  HEATING = false;
-}
-
-void relay_on()
-{
-  Serial.println("... Heating");
-  digitalWrite(relay, HIGH);
-  HEATING = true;
-}
-
-void led_unplugged() {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Probe unplugged!");
-  lcd.setCursor(0, 1);
-  lcd.print("Waiting for data");
-}
-
-void led_update(float target, float current, bool Heating)
-{
-  // set the cursor to column 0, line 1
-  // (note: line 1 is the second row, since counting begins with 0):
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Target:  " + String(target));
-  lcd.setCursor(0, 1);
-  lcd.print("Current: " + String(current));
-  if (HEATING) {
-    lcd.setCursor(15, 0);
-    lcd.print("H");
-  }
+//
+//  check_buttons();
+//
+//
+//
+//
+//
+//
+//
+//
+//  // Make sure we're getting usable readings
+//  if (tempC < 0) {
+//    Serial.print("Unplugged");
+//    relay_off();
+//    led_unplugged();
+//    delay(500);
+//  }
+//
+//  // See if we need to heat
+//  else {
+//    Serial.print(tempC);
+//
+//    if (tempC > TARGET_TEMP ) {
+//      // Overtemp!
+//      relay_off();
+//    }
+//    else {
+//      if (TARGET_TEMP - tempC > .4) {
+//        // we're off by over half a degree, so go hard
+//        relay_on();
+//      }
+//      else {
+//        // We're only off by a tiny amount, so just give it a tickle
+//        Serial.print("Tweak");
+//        relay_on();
+//        delay(100);
+//        relay_off();
+//      }
+//    }
+//    // Only update the LCD if there's a thermostat plugged in
+//    led_update(TARGET_TEMP, tempC, true);
+//  }
+//
+//  delay(200);
+//
+//}
+//
+//void relay_off()
+//{
+//  Serial.println("... Cooling");
+//  digitalWrite(relay, LOW);
+//  HEATING = false;
+//}
+//
+//void relay_on()
+//{
+//  Serial.println("... Heating");
+//  digitalWrite(relay, HIGH);
+//  HEATING = true;
+//}
+//
+//void led_unplugged() {
+//  lcd.clear();
+//  lcd.setCursor(0, 0);
+//  lcd.print("Probe unplugged!");
+//  lcd.setCursor(0, 1);
+//  lcd.print("Waiting for data");
+//}
+//
+//void led_update(float target, float current, bool Heating)
+//{
+//  // set the cursor to column 0, line 1
+//  // (note: line 1 is the second row, since counting begins with 0):
+//  lcd.clear();
+//  lcd.setCursor(0, 0);
+//  lcd.print("Target:  " + String(target));
+//  lcd.setCursor(0, 1);
+//  lcd.print("Current: " + String(current));
+//  if (HEATING) {
+//    lcd.setCursor(15, 0);
+//    lcd.print("H");
+//  }
 
 
 }
