@@ -8,16 +8,13 @@
  */
 
  
+int TARGET_TEMP = 63;
 
 
 // Eric's SousDuino controller, version 2
 // Written June 2015 by Eric Light
-
-int TARGET_TEMP = 24;
-
-// Download the OneWriteNoResistor library from https://github.com/bigjosh/OneWireNoResistor/
-// More info about the NoResistor library at http://wp.josh.com/2014/06/23/no-external-pull-up-needed-for-ds18b20-temp-sensor/#more-1892
-// Also install the Dallas Temperature library from https://github.com/milesburton/Arduino-Temperature-Control-Library/
+// Requires OneWriteNoResistor library from https://github.com/bigjosh/OneWireNoResistor/
+// and the Dallas Temperature library from https://github.com/milesburton/Arduino-Temperature-Control-Library/
 
 /* Pinout:
  *  
@@ -65,10 +62,11 @@ const int button_up = A0;
 const int button_down = A1;
 const int button_start_LED = A2;
 const int button_start = A3;
-const int analogHigh = 900;
-const int button_delay = 100;
+const int analogHigh = 600;
+const int button_delay = 200;
 
 // Set up thermocouple libraries
+// Use a precision of 11, because it's able to poll in 375ms instead of 750ms(!!)
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #define ONE_WIRE_BUS ds_data
@@ -110,56 +108,61 @@ void setup(void)
 
   // Initialise thermocouple
   sensors.getAddress(thermocouple, 0);
+  sensors.setResolution(thermocouple, TEMPERATURE_PRECISION);
   sensors.setWaitForConversion(false);
   sensors.begin();
   sensors.requestTemperatures();
 
 }
 
+void loop(void)
+{
+
+  poll_buttons();  // Check the buttons for presses and react appropriately
+
+  poll_temperature();
+
+  temp_react();  // React intelligently to thermocouple data
+
+}
 
 void poll_buttons() {
 
-
   // read the state of the start button
-  int button_start_voltage = analogRead(button_start);
-  Serial.println("Start button voltage = " + String(button_start_voltage));
-
+ 
   // Check to see if the start button is being pressed
-  if (button_start_voltage > analogHigh) {
-    
+  if (analogRead(button_start) > analogHigh) {
+    Serial.print("Start button pressed.. ");
     // Only respond if it's been a delay since last press
     if (millis() - lastPress > button_delay) {
       start_button_pressed = !start_button_pressed; 
     }
-    
     lastPress = millis();
   }
 
   // Update Start button LED state
   digitalWrite(button_start_LED, start_button_pressed);
-  
+  Serial.println(start_button_pressed);
 }
 
 void poll_temperature(){
-
+  // Read the most recent temperature calculated by the probe, and tell it to start a new one.
   tempC = sensors.getTempC(thermocouple);
-  sensors.requestTemperatures(); // prime the pump for the next one - but don't wait
-  Serial.println(String(tempC));
-  
+  sensors.requestTemperatures();
 }
 
 void temp_react(){
 
   // Make sure we're getting usable readings
+
   if (tempC < 0 || tempC > 80) {
     Serial.print("Unplugged");
     led_unplugged();
     relay_control(LOW);
-    delay(100);
   }
   else {
+
     // Only do this stuff if there's a thermostat plugged in
-    Serial.print(tempC);
 
     if (tempC > TARGET_TEMP ) {
       // Overtemp!
@@ -186,24 +189,25 @@ void temp_react(){
 
 }
 
-void loop(void)
-{
 
- // poll_buttons();
-
-  poll_temperature();
-
-  temp_react();  // React intelligently to thermocouple data
-
-}
 
 void relay_control(bool control) {
-  digitalWrite(relay, control);
 
-  switch (control) {
-      case HIGH: Serial.println("... Heating"); break;
-      case LOW: Serial.println("... Cooling"); break;
+
+  // No matter what, if that start button is off, the relay is off
+
+  if (start_button_pressed) {
+    digitalWrite(relay, control);
+  
+    switch (control) {
+        case HIGH: Serial.println("... Heating"); break;
+        case LOW: Serial.println("... Cooling"); break;
+    }
   }
+  else {
+    digitalWrite(relay, LOW);
+  }
+  
 }
 
 void led_unplugged() {
@@ -221,12 +225,16 @@ void led_update(float target, float current, bool Heating)
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Target:  " + String(target));
+
+  if (Heating && start_button_pressed) {
+    lcd.print(" H");
+  }
+  else {
+    lcd.print("  ");
+  }
+  
   lcd.setCursor(0, 1);
   lcd.print("Current: " + String(current));
-  if (HEATING) {
-    lcd.setCursor(15, 0);
-    lcd.print("H");
-  }
 }
 
 
