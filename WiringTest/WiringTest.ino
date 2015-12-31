@@ -9,12 +9,9 @@ int TARGET_TEMP = 60;
 
 
 /*   Testing class for Sous vide version 2
- *   
  *   Requires OneWireNoResistor, and Dallas Temperature
  *  
- *
- *
- * Arduino Nano R3 Pinout:
+ * Pinout:
  *  
  *  GND
  *  D2 - LED screen RS
@@ -30,14 +27,14 @@ int TARGET_TEMP = 60;
  *  D12
  *  D13
  *  3.3v
- *  A0 - 'Up' button (other side of Up button goes to +5)
- *  A1 - 'Down' button (other side of Up botton goes to +5)
+ *  A0 - 'Up' button
+ *  A1 - 'Down' button
  *  A2 - 'Start' button LED+
- *  A3 - 'Start' button -- ALSO 10k
+ *  A3 - 'Start' button
  *  A4
  *  A5
- *  A6 (unusable)
- *  A7 (unusable)
+ *  A6 - (can't use due to weird A6/A7)
+ *  A7 - (can't use due to weird A6/A7)
  *  5v - 'Start' button right
  *  GND - 'Start' button LED-
  *  
@@ -48,18 +45,25 @@ int TARGET_TEMP = 60;
  *  
  */ 
 
-
 // Thermocouple (DS18B20) PIN labels
 const int ds_data = 8;
 
 // Relay (SSR) PIN labels
 const int relay = 11;
 
-// Button labels
-const int button_up = A0;
-const int button_down = A1;
+// Set up Button labels and libraries
+#include <RBD_Button.h>
+ 
+RBD::Button button_up(A0); // input_pullup by default
+RBD::Button button_down(A1); // input_pullup by default
+RBD::Button button_start(A3); // input_pullup by default
+
+
+// const int button_up = A0;
+// const int button_down = A1;
 const int button_start_LED = A2;
-const int button_start = A3;
+// const int button_start = A3;
+
 
 // Constants for buttons -- debounce and analog High voltage
 const int analogHigh = 500;
@@ -95,9 +99,9 @@ void setup(void)
   Serial.println("Initialising variables");
 
   // Initialise Button pins
-  pinMode(button_up, INPUT_PULLUP); digitalWrite(button_up, LOW);
-  pinMode(button_down, INPUT_PULLUP); digitalWrite(button_down, LOW);
-  pinMode(button_start, INPUT); digitalWrite(button_start, LOW);
+  pinMode(button_up, INPUT_PULLUP); digitalWrite(button_up, HIGH);
+  pinMode(button_down, INPUT_PULLUP); digitalWrite(button_down, HIGH);
+  pinMode(button_start, INPUT_PULLUP); digitalWrite(button_start, HIGH);
   pinMode(button_start_LED, OUTPUT); digitalWrite(button_start_LED, LOW);
   
   
