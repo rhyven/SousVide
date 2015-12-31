@@ -27,10 +27,10 @@ float TARGET_TEMP = 60.0;
  *  D12
  *  D13
  *  3.3v
- *  A0 - 'Up' button
- *  A1 - 'Down' button
- *  A2 - 'Start' button LED+
- *  A3 - 'Start' button
+ *  A0 - 'Down' button (other leg to GND)
+ *  A1 - 'Up' button (other leg to GND)
+ *  A2 - 'Start' button LED+ (other leg to GND)
+ *  A3 - 'Start' button (other leg to GND)
  *  A4
  *  A5
  *  A6 - (can't use due to weird A6/A7)
@@ -61,10 +61,11 @@ RBD::Timer up_timer;
 RBD::Timer down_timer;
 
 // Set up thermocouple libraries
+// Use a precision of 11, because it's able to poll in 375ms instead of 750ms(!!)
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #define ONE_WIRE_BUS ds_data
-#define TEMPERATURE_PRECISION 12
+#define TEMPERATURE_PRECISION 11
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 DeviceAddress thermocouple;
@@ -74,6 +75,13 @@ DeviceAddress thermocouple;
 #include <LiquidCrystal.h>
 const int RS = 2; const int E = 3; const int D4 = 4; const int D5 = 5; const int D6 = 6; const int D7 = 7;
 LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
+
+
+-// Set up other variables
+-bool HEATING = false;
+-bool start_button_pressed = false;
+-unsigned long lastPress = 0;
+-float tempC = 0.0;
 
 
 void setup(void)
