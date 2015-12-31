@@ -7,14 +7,15 @@
  *  
  */
 
- 
-int TARGET_TEMP = 63;
 
+float TARGET_TEMP = 58.0;
+String HW_VERSION = "2.0";
+String SW_VERSION = "2.5";
 
-// Eric's SousDuino controller, version 2
-// Written June 2015 by Eric Light
+// Written by Eric Light (starting in June 2015)
 // Requires OneWriteNoResistor library from https://github.com/bigjosh/OneWireNoResistor/
 // and the Dallas Temperature library from https://github.com/milesburton/Arduino-Temperature-Control-Library/
+// And the RBD_Button and RBD_Timer libraries from http://robotsbigdata.com/docs-arduino-button.html
 
 /* Pinout:
  *  
@@ -32,10 +33,10 @@ int TARGET_TEMP = 63;
  *  D12
  *  D13
  *  3.3v
- *  A0 - 'Up' button -- ALSO 10k resistor to GND
- *  A1 - 'Down' button -- ALSO 10k resistor to GND
- *  A2 - 'Start' button LED+
- *  A3 - 'Start' button left -- ALSO 10k resistor to GND
+ *  A0 - 'Down' button (other leg to GND)
+ *  A1 - 'Up' button (other leg to GND)
+ *  A2 - 'Start' button LED+ (other leg to GND)
+ *  A3 - 'Start' button (other leg to GND)
  *  A4
  *  A5
  *  A6 - (can't use due to weird A6/A7)
@@ -50,20 +51,20 @@ int TARGET_TEMP = 63;
  *  
  */ 
 
+// Set up pin constants
+const int ds_data = 8;  // Thermocouple (DS18B20) data pin
+const int relay = 11;  // Relay (SSR) pin
+const int start_LED = A2;  // "Start" LED pin
+int start_button_pressed = 0;  // For start button toggling
 
-// Thermocouple (DS18B20) pin
-const int ds_data = 8;
-
-// Relay (SSR) pin
-const int relay = 11;
-
-// Button pins
-const int button_up = A0;
-const int button_down = A1;
-const int button_start_LED = A2;
-const int button_start = A3;
-const int analogHigh = 600;
-const int button_delay = 200;
+// Set up Button labels, timers, and libraries
+#include <RBD_Button.h>
+#include <RBD_Timer.h>
+RBD::Button button_down(A0);
+RBD::Button button_up(A1);
+RBD::Button button_start(A3);
+RBD::Timer up_timer;
+RBD::Timer down_timer;
 
 // Set up thermocouple libraries
 // Use a precision of 11, because it's able to poll in 375ms instead of 750ms(!!)
@@ -75,10 +76,8 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 DeviceAddress thermocouple;
 
-
-// Set up LCD screen libraries
+// Set up LCD screen 
 #include <LiquidCrystal.h>
-// initialize the library with the numbers of the interface pins
 const int RS = 2; const int E = 3; const int D4 = 4; const int D5 = 5; const int D6 = 6; const int D7 = 7;
 LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
 
@@ -95,16 +94,17 @@ void setup(void)
 
   Serial.println("Initialising variables");
 
-  pinMode(button_up, INPUT);
-  pinMode(button_down, INPUT);
-  pinMode(button_start, INPUT);
-  pinMode(button_start_LED, OUTPUT);
-  
-  // Initialse Relay pins
-  pinMode(relay, OUTPUT);  digitalWrite(relay, LOW);
+  // Initialise pins
+  pinMode(start_LED, OUTPUT); digitalWrite(start_LED, LOW);
+  pinMode(relay, OUTPUT); digitalWrite(relay, LOW);
 
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Starting up...");
+  lcd.setCursor(0, 1);
+  lcd.print("HW v" + HW_VERSION + "; SW v" + SW_VERSION);
 
   // Initialise thermocouple
   sensors.getAddress(thermocouple, 0);
@@ -118,7 +118,7 @@ void setup(void)
 void loop(void)
 {
 
-  poll_buttons();  // Check the buttons for presses and react appropriately
+  check_buttons();  // Check the buttons for presses and react appropriately
 
   poll_temperature();
 
@@ -126,24 +126,63 @@ void loop(void)
 
 }
 
-void poll_buttons() {
+void check_buttons() {
 
-  // read the state of the start button
- 
-  // Check to see if the start button is being pressed
-  if (analogRead(button_start) > analogHigh) {
-    Serial.print("Start button pressed.. ");
-    // Only respond if it's been a delay since last press
-    if (millis() - lastPress > button_delay) {
-      start_button_pressed = !start_button_pressed; 
-    }
-    lastPress = millis();
+  // Poll the Start button
+  if(button_start.onPressed()) {
+    Serial.println("Toggling");
+    digitalWrite(start_LED, !digitalRead(start_LED));
   }
 
-  // Update Start button LED state
-  digitalWrite(button_start_LED, start_button_pressed);
-  Serial.println(start_button_pressed);
+// Up button
+
+  // When pressed, start "hold-button" timer with a 1sec expiry
+  if(button_up.onPressed()) {
+    TARGET_TEMP += 0.1; 
+    Serial.println("New temperature is " + String(TARGET_TEMP));
+    up_timer.setTimeout(800);
+    up_timer.restart();
+  }
+
+  // If the button is still being pressed once the timer has expired, start responding again
+  if(button_up.isPressed()) {
+    if(up_timer.isExpired()) {
+      TARGET_TEMP += 0.1;
+      Serial.println("New temperature is " + String(TARGET_TEMP));
+      delay(50);
+    }
+  }
+
+  // Cancel the button timer when the button is released
+  if(button_up.onReleased()) {
+    up_timer.stop();
+  }
+
+// down button
+
+  // When pressed, start "hold-button" timer with a 1sec expiry
+  if(button_down.onPressed()) {
+    TARGET_TEMP -= 0.1; 
+    Serial.println("New temperature is " + String(TARGET_TEMP));
+    down_timer.setTimeout(800);
+    down_timer.restart();
+  }
+
+  // If the button is still being pressed once the timer has expired, start responding again
+  if(button_down.isPressed()) {
+    if(down_timer.isExpired()) {
+      TARGET_TEMP -= 0.1;
+      Serial.println("New temperature is " + String(TARGET_TEMP));
+      delay(50);
+    }
+  }
+
+  // Cancel the button timer when the button is released
+  if(button_down.onReleased()) {
+    down_timer.stop();
+  }
 }
+
 
 void poll_temperature(){
   // Read the most recent temperature calculated by the probe, and tell it to start a new one.
