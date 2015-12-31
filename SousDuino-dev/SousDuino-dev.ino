@@ -55,7 +55,7 @@ String SW_VERSION = "2.5";
 const int ds_data = 8;  // Thermocouple (DS18B20) data pin
 const int relay = 11;  // Relay (SSR) pin
 const int start_LED = A2;  // "Start" LED pin
-int start_button_pressed = 0;  // For start button toggling
+// int start_button_pressed = 0;  // For start button toggling
 
 // Set up Button labels, timers, and libraries
 #include <RBD_Button.h>
@@ -65,6 +65,7 @@ RBD::Button button_up(A1);
 RBD::Button button_start(A3);
 RBD::Timer up_timer;
 RBD::Timer down_timer;
+RBD::Timer screen_refresh;
 
 // Set up thermocouple libraries
 // Use a precision of 11, because it's able to poll in 375ms instead of 750ms(!!)
@@ -83,9 +84,6 @@ LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
 
 
 // Set up other variables
-bool HEATING = false;
-bool start_button_pressed = false;
-unsigned long lastPress = 0;
 float tempC = 0.0;
 
 void setup(void)
@@ -105,6 +103,9 @@ void setup(void)
   lcd.print("Starting up...");
   lcd.setCursor(0, 1);
   lcd.print("HW v" + HW_VERSION + "; SW v" + SW_VERSION);
+  delay(2000);
+
+  screen_refresh.setHertz(1);
 
   // Initialise thermocouple
   sensors.getAddress(thermocouple, 0);
@@ -118,10 +119,15 @@ void setup(void)
 void loop(void)
 {
 
+  // Clear the LCD every second for fresh data
+  if(screen_refresh.onRestart()) {
+    lcd.clear();
+  }
+
   check_buttons();  // Check the buttons for presses and react appropriately
 
   poll_temperature();
-
+  
   temp_react();  // React intelligently to thermocouple data
 
 }
@@ -200,31 +206,40 @@ void temp_react(){
     relay_control(LOW);
   }
   else {
-
-    // Only do this stuff if there's a thermostat plugged in
-
-    if (tempC > TARGET_TEMP ) {
-      // Overtemp!
-      relay_control(LOW);
-    }
-    else {
-      if (TARGET_TEMP - tempC > .4) {
-        // we're off by over half a degree, so go hard
-        relay_control(HIGH);
-      }
-      else {
-        // We're only off by a tiny amount, so just give it a tickle
-        Serial.print("Tweak");
-        relay_control(HIGH);
-        delay(100);
+    if (digitalRead(start_LED) == HIGH) {
+      // Only do this stuff if there's a thermostat plugged in
+  
+      if (tempC > TARGET_TEMP ) {
+        // Overtemp!
         relay_control(LOW);
       }
+      else {
+ 
+
+        relay_control(HIGH);
+
+        // I've commented this stuff out because I don't think we'll need it anymore -- to discover shortly
+                
+        //        if (TARGET_TEMP - tempC > .4) {
+        //          // we're off by over half a degree, so go hard
+        //          relay_control(HIGH);
+        //        }
+        //        else {
+        //          // We're only off by a tiny amount, so just give it a tickle
+        //          Serial.print("Tweak");
+        //          relay_control(HIGH);
+        //          delay(100);
+        //          relay_control(LOW);
+        // }
+      }
+      
+      // delay(200);
     }
     
-    led_update(TARGET_TEMP, tempC, true);
+    // Update the LCD screen whether heating is enabled or not
+    led_update(TARGET_TEMP, tempC);
   }
 
-  delay(200);
 
 }
 
@@ -235,7 +250,7 @@ void relay_control(bool control) {
 
   // No matter what, if that start button is off, the relay is off
 
-  if (start_button_pressed) {
+  if (digitalRead(start_LED) == HIGH) {
     digitalWrite(relay, control);
   
     switch (control) {
@@ -257,15 +272,15 @@ void led_unplugged() {
   lcd.print("Waiting for data");
 }
 
-void led_update(float target, float current, bool Heating)
+void led_update(float target, float current)
 {
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
-  lcd.clear();
+ // lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Target:  " + String(target));
 
-  if (Heating && start_button_pressed) {
+  if (digitalRead(relay) == HIGH) {
     lcd.print(" H");
   }
   else {
@@ -273,7 +288,7 @@ void led_update(float target, float current, bool Heating)
   }
   
   lcd.setCursor(0, 1);
-  lcd.print("Current: " + String(current));
+  lcd.print("Current: " + String(current) + "  ");
 }
 
 
