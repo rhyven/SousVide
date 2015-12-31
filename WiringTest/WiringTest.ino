@@ -1,7 +1,7 @@
 // Wiring tester
 // Written November 2015 by Eric Light
 
-int TARGET_TEMP = 60;
+float TARGET_TEMP = 60.0;
 
 // *************************************
 // TO DO:  Test relay, test thermocouple
@@ -9,7 +9,7 @@ int TARGET_TEMP = 60;
 
 
 /*   Testing class for Sous vide version 2
- *   Requires OneWireNoResistor, and Dallas Temperature
+ *   Requires OneWireNoResistor, Dallas Temperature, RBD_Butoon, and RBD_Timer libraries
  *  
  * Pinout:
  *  
@@ -45,29 +45,20 @@ int TARGET_TEMP = 60;
  *  
  */ 
 
-// Thermocouple (DS18B20) PIN labels
-const int ds_data = 8;
+// Set up pin constants
+const int ds_data = 8;  // Thermocouple (DS18B20) data pin
+const int relay = 11;  // Relay (SSR) pin
+const int start_LED = A2;  // "Start" LED pin
+int start_button_pressed = 0;  // For start button toggling
 
-// Relay (SSR) PIN labels
-const int relay = 11;
-
-// Set up Button labels and libraries
+// Set up Button labels, timers, and libraries
 #include <RBD_Button.h>
- 
-RBD::Button button_up(A0); // input_pullup by default
-RBD::Button button_down(A1); // input_pullup by default
-RBD::Button button_start(A3); // input_pullup by default
-
-
-// const int button_up = A0;
-// const int button_down = A1;
-const int button_start_LED = A2;
-// const int button_start = A3;
-
-
-// Constants for buttons -- debounce and analog High voltage
-const int analogHigh = 500;
-const int debounce = 100;
+#include <RBD_Timer.h>
+RBD::Button button_down(A0);
+RBD::Button button_up(A1);
+RBD::Button button_start(A3);
+RBD::Timer up_timer;
+RBD::Timer down_timer;
 
 // Set up thermocouple libraries
 #include <OneWire.h>
@@ -79,18 +70,11 @@ DallasTemperature sensors(&oneWire);
 DeviceAddress thermocouple;
 
 
-// Set up LCD screen libraries
+// Set up LCD screen 
 #include <LiquidCrystal.h>
-// initialize the library with the numbers of the interface pins
 const int RS = 2; const int E = 3; const int D4 = 4; const int D5 = 5; const int D6 = 6; const int D7 = 7;
 LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
 
-
-// Set up other variables
-int start_button_pressed = 0;
-int up_button_pressed = 0;
-int down_button_pressed = 0;
-unsigned long lastPress = 0;
 
 void setup(void)
 {
@@ -98,69 +82,79 @@ void setup(void)
 
   Serial.println("Initialising variables");
 
-  // Initialise Button pins
-  pinMode(button_up, INPUT_PULLUP); digitalWrite(button_up, HIGH);
-  pinMode(button_down, INPUT_PULLUP); digitalWrite(button_down, HIGH);
-  pinMode(button_start, INPUT_PULLUP); digitalWrite(button_start, HIGH);
-  pinMode(button_start_LED, OUTPUT); digitalWrite(button_start_LED, LOW);
-  
-  
-  // Initialse Relay pins
-  pinMode(relay, OUTPUT);
-  digitalWrite(relay, LOW);
+  // Initialise pins
+  pinMode(start_LED, OUTPUT); digitalWrite(start_LED, LOW);
+  pinMode(relay, OUTPUT); digitalWrite(relay, LOW);
 
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
-
+  lcd.clear();
 }
 
 
 void check_buttons() {
 
-  // read the state of the start button
-  int button_start_v = analogRead(button_start);
-  int button_up_v = analogRead(button_up);
-  int button_down_v = analogRead(button_down);
-
-  Serial.print("Start = " + String(button_start_v));
-  Serial.print("\t\tUp =   " + String(button_up_v));
-  Serial.println("\t\tDown = " + String(button_down_v));
-
-  // Check to see if the start button is being pressed
-  if (button_start_v > analogHigh) {
-    // Only respond if it's been a delay since last press
-    if (millis() - lastPress > debounce) {  
-      start_button_pressed++; 
-      digitalWrite(button_start_LED, start_button_pressed % 2);
-      }
-    lastPress = millis();
+  // Poll the Start button
+  if(button_start.onPressed()) {
+    Serial.println("Toggling");
+    digitalWrite(start_LED, !digitalRead(start_LED));
   }
 
+// Up button
 
-  // Check to see if the up button is being pressed
-  if (button_up_v > analogHigh) {
-    // Only respond if it's been a delay since last press
-    if (millis() - lastPress > debounce) {  up_button_pressed++;  }
-    lastPress = millis();
+  // When pressed, start "hold-button" timer with a 1sec expiry
+  if(button_up.onPressed()) {
+    TARGET_TEMP += 0.1; 
+    Serial.println("New temperature is " + String(TARGET_TEMP));
+    up_timer.setTimeout(800);
+    up_timer.restart();
   }
 
-
-  // Check to see if the down button is being pressed
-  if (button_down_v > analogHigh) {
-    // Only respond if it's been a delay since last press
-    if (millis() - lastPress > debounce) {  down_button_pressed++;  }
-    lastPress = millis();
+  // If the button is still being pressed once the timer has expired, start responding again
+  if(button_up.isPressed()) {
+    if(up_timer.isExpired()) {
+      TARGET_TEMP += 0.1;
+      Serial.println("New temperature is " + String(TARGET_TEMP));
+      delay(50);
+    }
   }
 
+  // Cancel the button timer when the button is released
+  if(button_up.onReleased()) {
+    up_timer.stop();
+  }
 
+// down button
+
+  // When pressed, start "hold-button" timer with a 1sec expiry
+  if(button_down.onPressed()) {
+    TARGET_TEMP -= 0.1; 
+    Serial.println("New temperature is " + String(TARGET_TEMP));
+    down_timer.setTimeout(800);
+    down_timer.restart();
+  }
+
+  // If the button is still being pressed once the timer has expired, start responding again
+  if(button_down.isPressed()) {
+    if(down_timer.isExpired()) {
+      TARGET_TEMP -= 0.1;
+      Serial.println("New temperature is " + String(TARGET_TEMP));
+      delay(50);
+    }
+  }
+
+  // Cancel the button timer when the button is released
+  if(button_down.onReleased()) {
+    down_timer.stop();
+  }
 }
 
 void loop(void)
 {
 
-  check_buttons();
-  led_update();
-  delay(50);
+ check_buttons();
+ led_update();
+ // delay(50);
 
 }
 
@@ -168,10 +162,7 @@ void led_update()
 {
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
-  lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Btn_Up: " + String(up_button_pressed));
-  lcd.setCursor(0, 1);
-  lcd.print("Btn_Dn:"  + String(down_button_pressed));
+  lcd.print(TARGET_TEMP);
 }
 
