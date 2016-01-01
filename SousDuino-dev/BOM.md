@@ -1,5 +1,14 @@
 # Bill of Materials
 
+- [ ] Buttons
+- [ ] SSR
+- [ ] Black plastic box
+- [ ] Pump
+- [ ] Heating element
+- [ ] Thermocouple
+- [ ] Shrink tubing
+- [ ] Hot glue
+
 ## Internal Components
 
 ### Logic Components
@@ -25,12 +34,33 @@
  * Buy: http://www.aliexpress.com/item/Free-Shipping-10PCS-3362P-1-103LF-3362P-10K-Trimpot-Trimmer-Potentiometer/1615750423.html
  * Cost: USD$0.15
 
+* 5pin DIN female panel mount socket
+ * Why: Connector for pump and thermocouple
+ * Buy: http://www.aliexpress.com/item/Free-shipping-5pcs-lot-5pin-DIN-female-Jack-to-male-2-hole-panel-mount-chassis-connector/661377463.html
+ * Cost: USD$1.10
+
 
 ### Electricity Management
+* C14 Male Module Plug with Fuse and Switch (mounted socket)
+ * Why: Main power inlet
+ * Certifications:  CE  (printed on item)
+ * Buy: http://www.aliexpress.com/item/3-Pin-IEC320-C14-Inlet-Module-Plug-Fuse-Switch-Male-Power-Socket-10A-250V-Wonderful-Gift/32244099644.html
+ * Cost: USD$1.24
+ 
+* Fuse - 250v, 5A, fast blow
+ * Why: Need a fuse on the power inlet
+ * Buy: http://www.aliexpress.com/item/ABWE-100-Pcs-Fast-Blow-5mm-x-20mm-Glass-Tube-Fuses-250V-5A-Amp/32395052521.html
+ * Cost: USD$0.02
+
+* C13 Female Socket (mounted socket)
+ * Why: Output power for element
+ * Buy: http://www.aliexpress.com/item/10Pcs-AC-250V-10A-IEC-320-C13-Female-3-Holes-Screw-Type-Outlet-Power-Socket/32366282935.html
+ * Cost: USD$0.49
+
 * Hi-Link 240vac to 5vdc isolated power supply module
- * Why:  Convert wall voltage to 5v DC
- * Datasheet:  http://www.hlktech.net/product_detail.php?ProId=54
-    * Certifications:  UL, CE
+ * Why: Convert wall voltage to 5v DC
+ * Datasheet: http://www.hlktech.net/product_detail.php?ProId=54
+    * Certifications: UL, CE
     * Safety standards: Compliance with UL1012, EN60950, UL60950
     * Conduction and radiation :comply with EN55011, EN55022 (CISPR22)
     * Electrostatic discharge :IEC / EN 61000-4-2 level 4 8kV / 15kV
@@ -38,14 +68,19 @@
  * Cost: USD$2.50
  
 * LM2596 DC-DC Voltage Regulator
- * Why:  Drop voltage from 5v to 3.8v for SIM module
+ * Why: Drop voltage from 5v to 3.8v for SIM module
  * Buy: http://www.aliexpress.com/item/1-Pcs-DC-DC-LM2596-Step-Down-Adjustable-Converter-Power-Supply-Module-Newest/1814236129.html
  * Cost: USD$0.93
 
+
 ## External Components
 
-* Black plastic box
-* Pump
-* Heating element
-* Thermocouple
-* Shrink tubing
+* C14 Male power socket - rewireable
+ * Why: Connects heating element to sous vide box
+ * Buy: http://www.aliexpress.com/item/10Pcs-AC-250V-10A-IEC-320-C13-Female-3-Holes-Screw-Type-Outlet-Power-Socket/32366282935.html
+ * Cost: USD$1.78
+
+* 5pin DIN Male Plug cable connector
+ * Why: Connect pump & thermocouple to sous vide box
+ * Buy: http://www.aliexpress.com/item/DIN-Plug-5Pin-Male-Plug-Cable-Connector-Soldering-DIY-With-Plastic-Handle-10pcs-Free-shipping/1845201653.html
+ * Cost: USD$0.73
