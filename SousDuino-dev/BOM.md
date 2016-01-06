@@ -1,10 +1,8 @@
 # Bill of Materials
 
 - [ ] Buttons
-- [ ] SSR
 - [ ] Black plastic box
 - [ ] Pump
-- [ ] Heating element
 - [ ] Thermocouple
 - [ ] Shrink tubing
 - [ ] Hot glue
@@ -39,6 +37,10 @@
  * Buy: http://www.aliexpress.com/item/Free-shipping-5pcs-lot-5pin-DIN-female-Jack-to-male-2-hole-panel-mount-chassis-connector/661377463.html
  * Cost: USD$1.10
 
+* 4-pin RGB LED
+ * Why: Hot/Cold indicator light
+ * Buy: http://www.aliexpress.com/item/Lowest-Price-10pcs-5mm-RGB-LED-Common-Cathode-4-Pin-Tri-Color-Emitting-Diodes/32512832772.html
+ * Cost: USD$0.10
 
 ### Electricity Management
 * C14 Male Module Plug with Fuse and Switch (mounted socket)
@@ -84,3 +86,20 @@
  * Why: Connect pump & thermocouple to sous vide box
  * Buy: http://www.aliexpress.com/item/DIN-Plug-5Pin-Male-Plug-Cable-Connector-Soldering-DIY-With-Plastic-Handle-10pcs-Free-shipping/1845201653.html
  * Cost: USD$0.73
+
+* Heating Element - 800w immersible element
+ * Water heater!
+ * Buy: http://www.aliexpress.com/wholesale?SearchText=new+travel+heater+element+water
+ * Or: http://www.aliexpress.com/category/60799/other-water-heaters.html
+ * Cost: USD$3.00
+
+* SSR - Two options:
+ * Fotek SSR-40DA 40a SSR
+    * Buy: http://www.aliexpress.com/wholesale?catId=141909&SearchText=ssr-40da
+    * Cost: USD$5.50
+ * Omron G3NA-210B AC200-240
+    * Buy: via Marc at Active Electrical
+    * Cost: NZD$66.50
+
+
+ 
