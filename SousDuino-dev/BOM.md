@@ -2,8 +2,6 @@
 
 - [ ] Buttons
 - [ ] Black plastic box
-- [ ] Pump
-- [ ] Thermocouple
 - [ ] Shrink tubing
 - [ ] Hot glue
 
@@ -43,6 +41,14 @@
  * Cost: USD$0.10
 
 ### Electricity Management
+* SSR - Two options:
+ * Fotek SSR-40DA 40a SSR
+    * Buy: http://www.aliexpress.com/wholesale?catId=141909&SearchText=ssr-40da
+    * Cost: USD$5.50
+ * Omron G3NA-210B AC200-240
+    * Buy: via Marc at Active Electrical
+    * Cost: NZD$66.50
+
 * C14 Male Module Plug with Fuse and Switch (mounted socket)
  * Why: Main power inlet
  * Certifications:  CE  (printed on item)
@@ -93,13 +99,10 @@
  * Or: http://www.aliexpress.com/category/60799/other-water-heaters.html
  * Cost: USD$3.00
 
-* SSR - Two options:
- * Fotek SSR-40DA 40a SSR
-    * Buy: http://www.aliexpress.com/wholesale?catId=141909&SearchText=ssr-40da
-    * Cost: USD$5.50
- * Omron G3NA-210B AC200-240
-    * Buy: via Marc at Active Electrical
-    * Cost: NZD$66.50
-
-
+* Thermocouple - DS18B20
+ * Buy: http://www.aliexpress.com/item/New-Waterproof-Digital-Thermal-Probe-or-Sensor-DS18B20/1859089770.html
+ * Cost: USD$1.63
  
+* 5VDC Water Pump - capable of 100deg water
+ * Buy: http://www.aliexpress.com/item/Mini-DC-12V-250CM-350L-H-Ultra-Quiet-Brushless-Motor-Submersible-Water-Pump/2054704227.html
+ * Cost: USD$6.45
