@@ -10,7 +10,7 @@
 
 float TARGET_TEMP = 58.0;
 String HW_VERSION = "2.0";
-String SW_VERSION = "2.5";
+String SW_VERSION = "2.6";
 
 // Written by Eric Light (starting in June 2015)
 // Requires OneWriteNoResistor library from https://github.com/bigjosh/OneWireNoResistor/
@@ -66,6 +66,7 @@ RBD::Button button_start(A3);
 RBD::Timer up_timer;
 RBD::Timer down_timer;
 RBD::Timer screen_refresh;
+bool START = false;
 
 // Set up thermocouple libraries
 // Use a precision of 11, because it's able to poll in 375ms instead of 750ms(!!)
@@ -137,7 +138,8 @@ void check_buttons() {
   // Poll the Start button
   if(button_start.onPressed()) {
     Serial.println("Toggling");
-    digitalWrite(start_LED, !digitalRead(start_LED));
+    START = !START;
+    digitalWrite(start_LED, START);
   }
 
 // Up button
@@ -201,12 +203,12 @@ void temp_react(){
   // Make sure we're getting usable readings
 
   if (tempC < 0 || tempC > 80) {
-    Serial.print("Unplugged");
+    Serial.println("Unplugged");
     led_unplugged();
     relay_control(LOW);
   }
   else {
-    if (digitalRead(start_LED) == HIGH) {
+    if (START) {
       // Only do this stuff if there's a thermostat plugged in
   
       if (tempC > TARGET_TEMP ) {
@@ -235,6 +237,10 @@ void temp_react(){
       
       // delay(200);
     }
+    else {
+      // If the Start button is off, ALWAYS turn off the relay
+      relay_control(LOW);
+    }
     
     // Update the LCD screen whether heating is enabled or not
     led_update(TARGET_TEMP, tempC);
@@ -250,7 +256,7 @@ void relay_control(bool control) {
 
   // No matter what, if that start button is off, the relay is off
 
-  if (digitalRead(start_LED) == HIGH) {
+  if (START) {
     digitalWrite(relay, control);
   
     switch (control) {
