@@ -204,8 +204,8 @@ void temp_react(){
 
   if (tempC < 0 || tempC > 80) {
     Serial.println("Unplugged");
-    led_unplugged();
     relay_control(LOW);
+    led_unplugged();
   }
   else {
     if (START) {
@@ -271,11 +271,11 @@ void relay_control(bool control) {
 }
 
 void led_unplugged() {
-  lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Probe unplugged!");
   lcd.setCursor(0, 1);
   lcd.print("Waiting for data");
+  delay(500);
 }
 
 void led_update(float target, float current)
