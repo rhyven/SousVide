@@ -1,16 +1,16 @@
 /*************************
- * TO DO
- * 
- * 1) add in a counter that increments on each "tweak"
- *   - if we have to do too many tweaks at a time, either increase the tweak time, or decrease the 0.4 degree margin
- *   
- *  
- */
+   TO DO
+
+   1) add in a counter that increments on each "tweak"
+     - if we have to do too many tweaks at a time, either increase the tweak time, or decrease the 0.4 degree margin
+
+
+*/
 
 
 float TARGET_TEMP = 58.0;
 String HW_VERSION = "2.0";
-String SW_VERSION = "2.6";
+String SW_VERSION = "2.7";
 
 // Written by Eric Light (starting in June 2015)
 // Requires OneWriteNoResistor library from https://github.com/bigjosh/OneWireNoResistor/
@@ -18,38 +18,48 @@ String SW_VERSION = "2.6";
 // And the RBD_Button and RBD_Timer libraries from http://robotsbigdata.com/docs-arduino-button.html
 
 /* Pinout:
- *  
- *  GND
- *  D2 - LED screen RS
- *  D3 - LED screen E
- *  D4 - LED screen D4
- *  D5 - LED screen D5
- *  D6 - LED screen D6
- *  D7 - LED screen D7
- *  D8 - Temperature probe data pin  (DS18B20)
- *  D9
- *  D10
- *  D11 - Relay control pin
- *  D12
- *  D13
- *  3.3v
- *  A0 - 'Down' button (other leg to GND)
- *  A1 - 'Up' button (other leg to GND)
- *  A2 - 'Start' button LED+ (other leg to GND)
- *  A3 - 'Start' button (other leg to GND)
- *  A4
- *  A5
- *  A6 - (can't use due to weird A6/A7)
- *  A7 - (can't use due to weird A6/A7)
- *  5v - 'Start' button right
- *  GND - 'Start' button LED-
- *  
- *  
- *  Screen PINS
- *  A - 5v
- *  K - GND
- *  
- */ 
+
+    GND
+    D2 - LED screen RS
+    D3 - LED screen E
+    D4 - LED screen D4
+    D5 - LED screen D5
+    D6 - LED screen D6
+    D7 - LED screen D7
+    D8 - Temperature probe data pin  (DS18B20)
+    D9
+    D10
+    D11 - Relay control pin
+    D12
+    D13
+    3.3v
+    A0 - 'Down' button (other leg to GND)
+    A1 - 'Up' button (other leg to GND)
+    A2 - 'Start' button LED+ (other leg to GND)
+    A3 - 'Start' button (other leg to GND)
+    A4
+    A5
+    A6 - (can't use due to weird A6/A7)
+    A7 - (can't use due to weird A6/A7)
+    5v - 'Start' button right
+    GND - 'Start' button LED-
+
+
+    Screen PINS
+    A - 5v
+    K - GND
+    D7 - 7
+    D6 - 6
+    D5 - 5
+    D4 - 4
+    D0 through D3 - nothing
+    E - 3
+    RW - GND
+    RS - 2
+    V0 - 10k Trimpot
+    VDD - +5v
+    VSS - GND
+*/
 
 // Set up pin constants
 const int ds_data = 8;  // Thermocouple (DS18B20) data pin
@@ -78,7 +88,7 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 DeviceAddress thermocouple;
 
-// Set up LCD screen 
+// Set up LCD screen
 #include <LiquidCrystal.h>
 const int RS = 2; const int E = 3; const int D4 = 4; const int D5 = 5; const int D6 = 6; const int D7 = 7;
 LiquidCrystal lcd(RS, E, D4, D5, D6, D7);
@@ -121,14 +131,14 @@ void loop(void)
 {
 
   // Clear the LCD every second for fresh data
-  if(screen_refresh.onRestart()) {
+  if (screen_refresh.onRestart()) {
     lcd.clear();
   }
 
   check_buttons();  // Check the buttons for presses and react appropriately
 
   poll_temperature();
-  
+
   temp_react();  // React intelligently to thermocouple data
 
 }
@@ -136,25 +146,25 @@ void loop(void)
 void check_buttons() {
 
   // Poll the Start button
-  if(button_start.onPressed()) {
+  if (button_start.onPressed()) {
     Serial.println("Toggling");
     START = !START;
     digitalWrite(start_LED, START);
   }
 
-// Up button
+  // Up button
 
   // When pressed, start "hold-button" timer with a 1sec expiry
-  if(button_up.onPressed()) {
-    TARGET_TEMP += 0.1; 
+  if (button_up.onPressed()) {
+    TARGET_TEMP += 0.1;
     Serial.println("New temperature is " + String(TARGET_TEMP));
     up_timer.setTimeout(800);
     up_timer.restart();
   }
 
   // If the button is still being pressed once the timer has expired, start responding again
-  if(button_up.isPressed()) {
-    if(up_timer.isExpired()) {
+  if (button_up.isPressed()) {
+    if (up_timer.isExpired()) {
       TARGET_TEMP += 0.1;
       Serial.println("New temperature is " + String(TARGET_TEMP));
       delay(50);
@@ -162,23 +172,23 @@ void check_buttons() {
   }
 
   // Cancel the button timer when the button is released
-  if(button_up.onReleased()) {
+  if (button_up.onReleased()) {
     up_timer.stop();
   }
 
-// down button
+  // down button
 
   // When pressed, start "hold-button" timer with a 1sec expiry
-  if(button_down.onPressed()) {
-    TARGET_TEMP -= 0.1; 
+  if (button_down.onPressed()) {
+    TARGET_TEMP -= 0.1;
     Serial.println("New temperature is " + String(TARGET_TEMP));
     down_timer.setTimeout(800);
     down_timer.restart();
   }
 
   // If the button is still being pressed once the timer has expired, start responding again
-  if(button_down.isPressed()) {
-    if(down_timer.isExpired()) {
+  if (button_down.isPressed()) {
+    if (down_timer.isExpired()) {
       TARGET_TEMP -= 0.1;
       Serial.println("New temperature is " + String(TARGET_TEMP));
       delay(50);
@@ -186,19 +196,19 @@ void check_buttons() {
   }
 
   // Cancel the button timer when the button is released
-  if(button_down.onReleased()) {
+  if (button_down.onReleased()) {
     down_timer.stop();
   }
 }
 
 
-void poll_temperature(){
+void poll_temperature() {
   // Read the most recent temperature calculated by the probe, and tell it to start a new one.
   tempC = sensors.getTempC(thermocouple);
   sensors.requestTemperatures();
 }
 
-void temp_react(){
+void temp_react() {
 
   // Make sure we're getting usable readings
 
@@ -210,38 +220,30 @@ void temp_react(){
   else {
     if (START) {
       // Only do this stuff if there's a thermostat plugged in
-  
+
       if (tempC > TARGET_TEMP ) {
         // Overtemp!
         relay_control(LOW);
       }
-      else {
- 
 
+      if (TARGET_TEMP - tempC > .4) {
+        // we're off by over half a degree, so go hard
         relay_control(HIGH);
-
-        // I've commented this stuff out because I don't think we'll need it anymore -- to discover shortly
-                
-        //        if (TARGET_TEMP - tempC > .4) {
-        //          // we're off by over half a degree, so go hard
-        //          relay_control(HIGH);
-        //        }
-        //        else {
-        //          // We're only off by a tiny amount, so just give it a tickle
-        //          Serial.print("Tweak");
-        //          relay_control(HIGH);
-        //          delay(100);
-        //          relay_control(LOW);
-        // }
       }
-      
-      // delay(200);
+      else {
+        // We're only off by a tiny amount, so just give it a tickle
+        Serial.print("Tweak");
+        relay_control(HIGH);
+        delay(100);
+        relay_control(LOW);
+      }
+
     }
     else {
       // If the Start button is off, ALWAYS turn off the relay
       relay_control(LOW);
     }
-    
+
     // Update the LCD screen whether heating is enabled or not
     led_update(TARGET_TEMP, tempC);
   }
@@ -258,16 +260,16 @@ void relay_control(bool control) {
 
   if (START) {
     digitalWrite(relay, control);
-  
+
     switch (control) {
-        case HIGH: Serial.println("... Heating"); break;
-        case LOW: Serial.println("... Cooling"); break;
+      case HIGH: Serial.println("... Heating"); break;
+      case LOW: Serial.println("... Cooling"); break;
     }
   }
   else {
     digitalWrite(relay, LOW);
   }
-  
+
 }
 
 void led_unplugged() {
@@ -282,7 +284,7 @@ void led_update(float target, float current)
 {
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
- // lcd.clear();
+  // lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Target:  " + String(target));
 
@@ -292,7 +294,7 @@ void led_update(float target, float current)
   else {
     lcd.print("  ");
   }
-  
+
   lcd.setCursor(0, 1);
   lcd.print("Current: " + String(current) + "  ");
 }
