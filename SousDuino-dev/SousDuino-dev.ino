@@ -8,9 +8,9 @@
 */
 
 
-float TARGET_TEMP = 58.0;
+float TARGET_TEMP = 58.0f;
 String HW_VERSION = "2.0";
-String SW_VERSION = "2.7";
+String SW_VERSION = "2.8";
 
 // Written by Eric Light (starting in June 2015)
 // Requires OneWriteNoResistor library from https://github.com/bigjosh/OneWireNoResistor/
@@ -61,11 +61,17 @@ String SW_VERSION = "2.7";
     VSS - GND
 */
 
+/*
+ * EEPROM Storage
+ * Byte 0x0 - int - previous set temperature, multiplied by 100.  Divide by 100 to restore.
+ * 
+ * 
+ */
+
 // Set up pin constants
 const int ds_data = 8;  // Thermocouple (DS18B20) data pin
 const int relay = 11;  // Relay (SSR) pin
 const int start_LED = A2;  // "Start" LED pin
-// int start_button_pressed = 0;  // For start button toggling
 
 // Set up Button labels, timers, and libraries
 #include <RBD_Button.h>
@@ -77,6 +83,12 @@ RBD::Timer up_timer;
 RBD::Timer down_timer;
 RBD::Timer screen_refresh;
 bool START = false;
+
+// Set up timer and libraries to save EEPROM data
+#include <EEPROM.h>
+RBD::Timer save_temp_setting;
+int EEPROM_target_temp_address = 0;
+
 
 // Set up thermocouple libraries
 // Use a precision of 11, because it's able to poll in 375ms instead of 750ms(!!)
@@ -107,6 +119,9 @@ void setup(void)
   pinMode(start_LED, OUTPUT); digitalWrite(start_LED, LOW);
   pinMode(relay, OUTPUT); digitalWrite(relay, LOW);
 
+  // Check EEPROM for last-saved target temperature
+  TARGET_TEMP = read_target_temperature();
+
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
   lcd.clear();
@@ -114,8 +129,9 @@ void setup(void)
   lcd.print("Starting up...");
   lcd.setCursor(0, 1);
   lcd.print("HW v" + HW_VERSION + "; SW v" + SW_VERSION);
-  delay(2000);
+  delay(2500);
 
+  save_temp_setting.setTimeout(10000);
   screen_refresh.setHertz(1);
 
   // Initialise thermocouple
@@ -133,6 +149,12 @@ void loop(void)
   // Clear the LCD every second for fresh data
   if (screen_refresh.onRestart()) {
     lcd.clear();
+    Serial.println("Target temperature is " + String(TARGET_TEMP) + "; Current temperature is " + String(tempC));
+  }
+
+  // Save the target temperature after 10 seconds
+  if (save_temp_setting.onExpired()) {
+    save_target_temperature();
   }
 
   check_buttons();  // Check the buttons for presses and react appropriately
@@ -141,6 +163,25 @@ void loop(void)
 
   temp_react();  // React intelligently to thermocouple data
 
+}
+
+float read_target_temperature() {
+
+  float EEPROM_target = 0.00f;
+  EEPROM.get(EEPROM_target_temp_address, EEPROM_target);
+  Serial.println("Retrieved temperature " + String(EEPROM_target) + " from address " + String(EEPROM_target_temp_address));
+  if (EEPROM_target > 50 && EEPROM_target < 80) {
+    Serial.println("Setting target temperature from EEPROM");
+    return EEPROM_target;
+  }
+  return TARGET_TEMP;
+}
+
+void save_target_temperature() {
+
+  Serial.println("Saving temperature " + String(TARGET_TEMP) + " to address " + String(EEPROM_target_temp_address));
+  EEPROM.put(EEPROM_target_temp_address, TARGET_TEMP);
+  
 }
 
 void check_buttons() {
@@ -160,6 +201,7 @@ void check_buttons() {
     Serial.println("New temperature is " + String(TARGET_TEMP));
     up_timer.setTimeout(800);
     up_timer.restart();
+    save_temp_setting.restart();
   }
 
   // If the button is still being pressed once the timer has expired, start responding again
@@ -174,6 +216,7 @@ void check_buttons() {
   // Cancel the button timer when the button is released
   if (button_up.onReleased()) {
     up_timer.stop();
+    save_temp_setting.restart();
   }
 
   // down button
@@ -198,6 +241,7 @@ void check_buttons() {
   // Cancel the button timer when the button is released
   if (button_down.onReleased()) {
     down_timer.stop();
+    save_temp_setting.restart();
   }
 }
 
@@ -212,12 +256,12 @@ void temp_react() {
 
   // Make sure we're getting usable readings
 
-  if (tempC < 0 || tempC > 80) {
-    Serial.println("Unplugged");
-    relay_control(LOW);
-    led_unplugged();
-  }
-  else {
+//  if (tempC < 0 || tempC > 80) {
+//    Serial.println("Unplugged");
+//    relay_control(LOW);
+//    led_unplugged();
+//  }
+//  else {
     if (START) {
       // Only do this stuff if there's a thermostat plugged in
 
@@ -246,7 +290,7 @@ void temp_react() {
 
     // Update the LCD screen whether heating is enabled or not
     led_update(TARGET_TEMP, tempC);
-  }
+ // }
 
 
 }
