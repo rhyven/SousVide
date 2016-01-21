@@ -256,12 +256,12 @@ void temp_react() {
 
   // Make sure we're getting usable readings
 
-//  if (tempC < 0 || tempC > 80) {
-//    Serial.println("Unplugged");
-//    relay_control(LOW);
-//    led_unplugged();
-//  }
-//  else {
+  if (tempC < 0 || tempC > 80) {
+    Serial.println("Unplugged");
+    relay_control(LOW);
+    led_unplugged();
+  }
+  else {
     if (START) {
       // Only do this stuff if there's a thermostat plugged in
 
@@ -290,7 +290,7 @@ void temp_react() {
 
     // Update the LCD screen whether heating is enabled or not
     led_update(TARGET_TEMP, tempC);
- // }
+  }
 
 
 }
