@@ -251,7 +251,7 @@ void temp_react() {
 
   // Make sure we're getting usable readings
 
-  if (tempC < 0 || tempC > 80) {
+  if (tempC < 0 || tempC > 110) {
     Serial.println("Unplugged");
     relay_control(LOW);
     led_unplugged();
