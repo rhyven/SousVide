@@ -131,8 +131,12 @@ void setup(void)
   lcd.print("HW v" + HW_VERSION + "; SW v" + SW_VERSION);
   delay(2500);
 
+  // Set timer timeouts
   save_temp_setting.setTimeout(10000);
   screen_refresh.setHertz(1);
+  up_timer.setTimeout(800);
+  down_timer.setTimeout(800);
+
 
   // Initialise thermocouple
   sensors.getAddress(thermocouple, 0);
@@ -199,7 +203,6 @@ void check_buttons() {
   if (button_up.onPressed()) {
     TARGET_TEMP += 0.1;
     Serial.println("New temperature is " + String(TARGET_TEMP));
-    up_timer.setTimeout(800);
     up_timer.restart();
     save_temp_setting.restart();
   }
@@ -225,7 +228,6 @@ void check_buttons() {
   if (button_down.onPressed()) {
     TARGET_TEMP -= 0.1;
     Serial.println("New temperature is " + String(TARGET_TEMP));
-    down_timer.setTimeout(800);
     down_timer.restart();
   }
 
