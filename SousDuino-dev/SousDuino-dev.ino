@@ -61,13 +61,6 @@ String SW_VERSION = "2.8";
     VSS - GND
 */
 
-/*
- * EEPROM Storage
- * Byte 0x0 - int - previous set temperature, multiplied by 100.  Divide by 100 to restore.
- * 
- * 
- */
-
 // Set up pin constants
 const int ds_data = 8;  // Thermocouple (DS18B20) data pin
 const int relay = 11;  // Relay (SSR) pin
@@ -174,7 +167,7 @@ float read_target_temperature() {
   float EEPROM_target = 0.00f;
   EEPROM.get(EEPROM_target_temp_address, EEPROM_target);
   Serial.println("Retrieved temperature " + String(EEPROM_target) + " from address " + String(EEPROM_target_temp_address));
-  if (EEPROM_target > 50 && EEPROM_target < 80) {
+  if (EEPROM_target > 40 && EEPROM_target < 90) {
     Serial.println("Setting target temperature from EEPROM");
     return EEPROM_target;
   }
