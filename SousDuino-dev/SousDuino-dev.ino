@@ -3,7 +3,7 @@
 
    1) add in a counter that increments on each "tweak"
      - if we have to do too many tweaks at a time, either increase the tweak time, or decrease the 0.4 degree margin
-
+   2)  Temperature calibration!!!
 
 */
 
