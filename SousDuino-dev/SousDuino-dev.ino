@@ -123,6 +123,7 @@ void setup(void)
   lcd.setCursor(0, 1);
   lcd.print("HW v" + HW_VERSION + "; SW v" + SW_VERSION);
   delay(2500);
+  lcd.clear();
 
   // Set timer timeouts
   save_temp_setting.setTimeout(10000);
@@ -144,10 +145,10 @@ void loop(void)
 {
 
   // Clear the LCD every second for fresh data
-  if (screen_refresh.onRestart()) {
-    lcd.clear();
-    Serial.println("Target temperature is " + String(TARGET_TEMP) + "; Current temperature is " + String(tempC));
-  }
+//  if (screen_refresh.onRestart()) {
+//    lcd.clear();
+//    Serial.println("Target temperature is " + String(TARGET_TEMP) + "; Current temperature is " + String(tempC));
+//  }
 
   // Save the target temperature after 10 seconds
   if (save_temp_setting.onExpired()) {
